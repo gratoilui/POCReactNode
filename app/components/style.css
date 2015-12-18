@@ -1,0 +1,10 @@
+#board {
+    height : 500px;
+}
+
+#textBox {
+    position : absolute;
+    display : none;
+    width : 100px;
+    z-index : 100;
+}

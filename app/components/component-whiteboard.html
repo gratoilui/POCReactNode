@@ -3,7 +3,9 @@
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html"/>
 <link rel="import" href="../../bower_components/paper-header-panel/paper-header-panel.html"/>
 <dom-module id="component-whiteboard">
+    <link rel="import" type="css" href="style.css">
     <template>
+        <input id="textBox" />
         <paper-header-panel class="flex" id="whiteboard">
             <div class="paper-header">Brainstorming</div>
             <div class="style-scope paper-header-panel" id="board"></div>
@@ -12,7 +14,22 @@
 
     <script>
         Polymer({
-            is : "component-whiteboard"
+            is : "component-whiteboard",
+            listeners: {
+                'board.click' : 'showContentBox',
+                'textBox.keypress' : 'insertText'
+            },
+            showContentBox : function (e) {
+                Polymer.dom(this.root).querySelector('#textBox').style.display='block';
+                Polymer.dom(this.root).querySelector('#textBox').style.top = e.clientY+"px";
+                Polymer.dom(this.root).querySelector('#textBox').style.left = e.clientX+"px";
+            },
+            insertText : function(e){
+                if(e.keyCode == 13) {
+                    Polymer.dom(this.root).querySelector('#textBox').style.display='none';
+                }
+            }
+
         });
     </script>
 </dom-module>
