@@ -5,35 +5,76 @@
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; display:none; }
       form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
       form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
+      canvas {
+        border:solid 1px black;
+      }
     </style>
     <script src="/socket.io/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
   </head>
   <body>
-    <ul id="messages"></ul>
+    <h2 id="mouseposition">test</h2>
+    <canvas id="tutoriel" width="500" height="500"></canvas>
     <form id="form" action="">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
+
     <script>
       var socket = io();
-      
-       $('form').submit(function(){
-        socket.emit('chat message', $('#m').val());
-        $('#m').val('');
-        return false;
-      }); 
+      var form = $('form')[0];
+      var canvas = $('#tutoriel')[0];
+      var ctx = canvas.getContext('2d');
+      var mouseposition = $('#mouseposition')[0];
+      var currentMousePos;
 
-      socket.on('chat message', function(msg){
-        $('#messages').append($('<li>').text(msg));
+      $('form').submit(function(){
+        socket.emit('chat message', {
+          'content': $('#m').val(),
+          'pos': currentMousePos
+        });
+        $('#m').val('');
+        form.style.display = 'none';
+        return false;  
       });
 
+      socket.on('chat message', function(msg){
+        $('#messages').append($('<li>').text(msg.content));
+        writeMessage(ctx, msg.content, msg.pos.x, msg.pos.y);
+      });      
 
+      function getMousePos(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+          x: evt.clientX - rect.left,
+          y: evt.clientY - rect.top
+        };
+      }
+
+      function writeMessage(context, message, x, y) {
+        // context.clearRect(0, 0, canvas.width, canvas.height);
+        context.font = '18pt Calibri';
+        context.fillStyle = 'black';
+        context.fillText(message, x, y);
+      }
+
+      canvas.addEventListener('mousemove', function(evt) {
+        var mousePos = getMousePos(canvas, evt);
+        var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
+        
+      }, false);
+
+      canvas.addEventListener('click', function(evt) {
+        form.style.display = 'block';
+        $('#m').focus();
+        currentMousePos = getMousePos(canvas, evt);
+        mouseposition.innerHTML = currentMousePos.x + ',' + currentMousePos.y;
+      });
     </script>
   </body>
 </html>
