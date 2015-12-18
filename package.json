@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/gratoilui/POCReactNode/issues"
   },
-  "homepage": "https://github.com/gratoilui/POCReactNode"
+  "homepage": "https://github.com/gratoilui/POCReactNode",
+  "devDependencies": {
+    "bower": "^1.7.1"
+  }
 }
