@@ -1,0 +1,10 @@
+#whiteboard {
+    left: 0px;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+}
+
+#whiteboard .paper-header {
+    background-color:#03a9f4;
+}

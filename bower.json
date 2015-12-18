@@ -1,0 +1,14 @@
+{
+  "name": "POCWhiteBoard",
+  "version": "0.0.1",
+  "authors": [
+    "RJA & JSO"
+  ],
+  "appPath": "app",
+  "devDependencies": {
+    "polymer": "~1.2.3",
+    "paper-listbox": "polymerelements/paper-listbox#~1.1.0",
+    "paper-header-panel": "PolymerElements/paper-header-panel#~1.1.2",
+    "paper-item": "PolymerElements/paper-item#~1.1.3"
+  }
+}
