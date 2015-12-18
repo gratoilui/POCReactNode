@@ -8,26 +8,66 @@
         <input id="textBox" />
         <paper-header-panel class="flex" id="whiteboard">
             <div class="paper-header">Brainstorming</div>
-            <div class="style-scope paper-header-panel" id="board"></div>
+            <div class="style-scope paper-header-panel" id="board">
+                <canvas id="canvas" width="1000" height="700"></canvas>
+            </div>
         </paper-header-panel>
     </template>
-
+<script src="/socket.io/socket.io.js"></script>
     <script>
         Polymer({
+            currentMousePos: {
+                x : 0,
+                y : 0
+            },
+            canvas: null,
+            socket: null,
             is : "component-whiteboard",
             listeners: {
                 'board.click' : 'showContentBox',
                 'textBox.keypress' : 'insertText'
             },
+            getMousePos : function (canvas, evt) {
+                var rect = canvas.getBoundingClientRect();
+                return {
+                  x: evt.clientX - rect.left,
+                  y: evt.clientY - rect.top
+                };
+            },
             showContentBox : function (e) {
                 Polymer.dom(this.root).querySelector('#textBox').style.display='block';
                 Polymer.dom(this.root).querySelector('#textBox').style.top = e.clientY+"px";
                 Polymer.dom(this.root).querySelector('#textBox').style.left = e.clientX+"px";
+                Polymer.dom(this.root).querySelector('#textBox').focus();
+                this.currentMousePos = this.getMousePos(this.canvas, e);
+                console.log(this.currentMousePos.x);
             },
             insertText : function(e){
                 if(e.keyCode == 13) {
+                    console.log('emit');
+                    this.socket.emit('chat_msg', {
+                      'content': e.target.value,
+                      'pos': this.currentMousePos
+                    });
                     Polymer.dom(this.root).querySelector('#textBox').style.display='none';
+                    Polymer.dom(this.root).querySelector('#textBox').value = '';
                 }
+            },
+            writeMessage : function(context, message, x, y) {
+                context.font = '18pt Calibri';
+                context.fillStyle = 'black';
+                context.fillText(message, x, y);
+            },
+            ready : function(e) {
+                this.canvas = Polymer.dom(this.root).querySelector('#canvas');
+                this.socket = io();
+                var ctx = this.canvas.getContext('2d');
+            
+                var writeMessage = this.writeMessage;
+                this.socket.on('chat_msg', function(msg){
+                    console.log(msg);
+                    writeMessage(ctx, msg.content, msg.pos.x, msg.pos.y);
+                });
             }
 
         });
