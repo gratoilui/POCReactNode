@@ -1,19 +1,49 @@
+<!--
+Composant représente le "whiteboard"
+Le composant a deux modes :
+    -modeUser => pour les utilisateurs permettant aux utilisateurs de s'inscrire et d'écrire
+    -mode normal => pour le "whiteboard" à projeter qui contient la liste des utilisateurs inscrit
+-->
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html"/>
 <link rel="import" href="../../bower_components/paper-header-panel/paper-header-panel.html"/>
 <dom-module id="component-whiteboard">
     <link rel="import" type="css" href="style.css">
     <template>
+        <!--
+            Partie representant le white board
+        -->
         <input id="textBox" />
-        <paper-header-panel class="flex" id="whiteboard">
-            <div class="paper-header">Brainstorming</div>
-            <div class="style-scope paper-header-panel" id="board">
-                <canvas id="canvas" width="1000" height="700"></canvas>
-            </div>
-        </paper-header-panel>
+        <div id="whiteboard" class="layout horizontal">
+            <paper-header-panel class="flex">
+                <div class="paper-header">Brainstorming</div>
+                <div class="style-scope paper-header-panel" id="board">
+                    <canvas id="canvas" width="1000" height="700"></canvas>
+                </div>
+            </paper-header-panel>
+            <paper-header-panel id="userList">
+                <div class="paper-header">Utilisateurs</div>
+                <paper-listbox selected="1" class="style-scope paper-header-panel">
+                    <template is="dom-repeat" items="{{users}}" as="user">
+                        <paper-item>{{user.name}}</paper-item>
+                    </template>
+                </paper-listbox>
+            </paper-header-panel>
+        </div>
+
+        <!--
+            Formulaire d'inscription de l'utilisateur, visible à l'arrivée de l'utilisateur sur la page
+        -->
+        <div id="connection">
+            <label for="user">Nom d'utilisateur</label>
+            <input id="user" type="text" size="20"/>
+            <paper-button raised id="connect">Connection</paper-button>
+        </div>
     </template>
-<script src="/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         Polymer({
             currentMousePos: {
@@ -22,10 +52,14 @@
             },
             canvas: null,
             socket: null,
-            is : "component-whiteboard",
+            //Ecoute des evenements sur le composant
             listeners: {
-                'board.click' : 'showContentBox',
-                'textBox.keypress' : 'insertText'
+                'canvas.click' : 'showContentBox',
+                'textBox.keypress' : 'insertText',
+                'connect.click' : 'connection'
+            },
+            properties : {
+                modeuser: false //mode d'utilisation du composant, false = whiteboard, '' = mode utilisateur
             },
             getMousePos : function (canvas, evt) {
                 var rect = canvas.getBoundingClientRect();
@@ -34,42 +68,106 @@
                   y: evt.clientY - rect.top
                 };
             },
+            //Permet de rendre visible la zone de texte à l'endroit du clique de l'utilisateur
             showContentBox : function (e) {
                 Polymer.dom(this.root).querySelector('#textBox').style.display='block';
                 Polymer.dom(this.root).querySelector('#textBox').style.top = e.clientY+"px";
                 Polymer.dom(this.root).querySelector('#textBox').style.left = e.clientX+"px";
                 Polymer.dom(this.root).querySelector('#textBox').focus();
                 this.currentMousePos = this.getMousePos(this.canvas, e);
-                console.log(this.currentMousePos.x);
             },
+            //Permet d'informer les clients d'un nouveau message
             insertText : function(e){
+                //Lors de la touche entrée on informe l'ensemble des "whiteboard" du texte inséré
+                //pour qu'ils se mettent à jour
                 if(e.keyCode == 13) {
-                    console.log('emit');
                     this.socket.emit('chat_msg', {
                       'content': e.target.value,
                       'pos': this.currentMousePos
                     });
+                    //On cache la zone de texte
                     Polymer.dom(this.root).querySelector('#textBox').style.display='none';
                     Polymer.dom(this.root).querySelector('#textBox').value = '';
                 }
             },
-            writeMessage : function(context, message, x, y) {
+            //Permet d'écrire un message dans le canvas
+            writeMessage : function(context, msg, x, y) {
                 context.font = '18pt Calibri';
                 context.fillStyle = 'black';
-                context.fillText(message, x, y);
+                context.fillText(msg, x, y);
             },
-            ready : function(e) {
+            //Permet de cacher le formulaire de connection et d'afficher le whiteboard
+            connection : function() {
+                Polymer.dom(this.root).querySelector("#whiteboard").style.display = "";
+                Polymer.dom(this.root).querySelector("#userList").style.display = "none";
+                Polymer.dom(this.root).querySelector("#connection").style.display = "none";
+                this.initCanvas();
+            },
+            //Permet d'initiliser le canvas
+            initCanvas : function() {
+                var userName = Polymer.dom(this.root).querySelector("#user").value;
                 this.canvas = Polymer.dom(this.root).querySelector('#canvas');
                 this.socket = io();
                 var ctx = this.canvas.getContext('2d');
-            
+
+                var msg = {username:userName};
+                this.socket.emit('chat_cnx', msg);
+
                 var writeMessage = this.writeMessage;
+                //Ecoute de l'event chat_msg de socket IO pour inserer un message
                 this.socket.on('chat_msg', function(msg){
-                    console.log(msg);
                     writeMessage(ctx, msg.content, msg.pos.x, msg.pos.y);
                 });
+            },
+            //Fonction pour générer une couleur aléatoire
+            randomColor : function () {
+                var letters = '0123456789ABCDEF'.split('');
+                var color = '#';
+                for (var i = 0; i < 6; i++ ) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            },
+            //permet d'ajouter un utilisateur à la liste
+            addUser : function(name) {
+                if(!this.users){
+                    this.users = [];
+                }
+                this.push('users',{name : name});
+            },
+            //permet de supprimer un utilisateur à la liste
+            removeUser : function(name) {
+                if(this.users){
+                    for(var i = 0 ; i< this.users.length ; i++){
+                        if(this.users[i].name == name) {
+                            this.splice("users", i, 1);
+                            break;
+                        }
+                    }
+                }
+            },
+            //Event au moment où notre composant est pret à être utilisé
+            ready : function(e) {
+                //Si mode utilisateur on affiche seulement le formulaire de connection pour commencer
+                if(this.modeuser == ''){
+                    Polymer.dom(this.root).querySelector("#whiteboard").style.display = "none";
+                    Polymer.dom(this.root).querySelector("#connection").style.display = "block";
+                }
+                //Sinon on affiche le whiteboard
+                else {
+                    var self = this;
+                    //initilisation du canvas
+                    this.initCanvas();
+                    //Ecoute de l'évent adduser pour ajouter un utilisateur à la liste
+                    this.socket.on('adduser', function(msg){
+                        self.addUser(msg.username)
+                    });
+                    //Ecoute de l'évent removeuser pour supprimer un utilisateur à la liste
+                    this.socket.on('removeuser', function(msg){
+                        self.removeUser(msg.username)
+                    });
+                }
             }
-
         });
     </script>
 </dom-module>

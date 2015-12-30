@@ -1,5 +1,5 @@
 #board {
-    height : 500px;
+    height : 700px;
 }
 
 #textBox {
@@ -11,4 +11,19 @@
 
 #canvas {
 	border:1px solid black;
+}
+
+#whiteboard {
+    left: 0px;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+}
+
+#connection {
+    display : none;
+}
+
+#whiteboard .paper-header {
+    background-color:#03a9f4;
 }
