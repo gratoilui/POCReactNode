@@ -4,12 +4,14 @@ Le composant a deux modes :
     -modeUser => pour les utilisateurs permettant aux utilisateurs de s'inscrire et d'écrire
     -mode normal => pour le "whiteboard" à projeter qui contient la liste des utilisateurs inscrit
 -->
-<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-icon-item/paper-item.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/paper-styles/paper-styles.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html"/>
 <link rel="import" href="../../bower_components/paper-header-panel/paper-header-panel.html"/>
+
 <dom-module id="component-whiteboard">
     <link rel="import" type="css" href="style.css">
     <template>
@@ -18,17 +20,19 @@ Le composant a deux modes :
         -->
         <input id="textBox" />
         <div id="whiteboard" class="layout horizontal">
-            <paper-header-panel class="flex">
+            <paper-header-panel class="blue">
                 <div class="paper-header">Brainstorming</div>
-                <div class="style-scope paper-header-panel" id="board">
-                    <canvas id="canvas" width="1000" height="700"></canvas>
+                <div class="style-scope paper-header-panel" >
+                    <canvas id="canvas" width="1400" height="650"></canvas>
                 </div>
             </paper-header-panel>
-            <paper-header-panel id="userList">
+            <paper-header-panel id="userList" class="green">
                 <div class="paper-header">Utilisateurs</div>
-                <paper-listbox selected="1" class="style-scope paper-header-panel">
+                <paper-listbox selected="1" class="style-scope paper-header-panel list short">
                     <template is="dom-repeat" items="{{users}}" as="user">
-                        <paper-item>{{user.name}}</paper-item>
+                        <paper-icon-item>
+                            <div class="avatar red" item-icon></div>{{user.name}}
+                        </paper-icon-item>
                     </template>
                 </paper-listbox>
             </paper-header-panel>
