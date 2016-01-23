@@ -4,7 +4,8 @@ Le composant a deux modes :
     -modeUser => pour les utilisateurs permettant aux utilisateurs de s'inscrire et d'écrire
     -mode normal => pour le "whiteboard" à projeter qui contient la liste des utilisateurs inscrit
 -->
-<link rel="import" href="../../bower_components/paper-icon-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="../../bower_components/paper-styles/paper-styles.html">
@@ -28,10 +29,11 @@ Le composant a deux modes :
             </paper-header-panel>
             <paper-header-panel id="userList" class="green">
                 <div class="paper-header">Utilisateurs</div>
-                <paper-listbox selected="1" class="style-scope paper-header-panel list short">
+                <paper-listbox selected="1" class="style-scope paper-header-panel">
                     <template is="dom-repeat" items="{{users}}" as="user">
                         <paper-icon-item>
-                            <div class="avatar red" item-icon></div>{{user.name}}
+                            <!-- style$ pour pouvoir mixer du texte avec du data binding -->
+                            <div class="avatar" style$="background-color:{{user.color}}" item-icon></div>{{user.name}}
                         </paper-icon-item>
                     </template>
                 </paper-listbox>
@@ -95,9 +97,9 @@ Le composant a deux modes :
                 }
             },
             //Permet d'écrire un message dans le canvas
-            writeMessage : function(context, msg, x, y) {
+            writeMessage : function(context, msg, x, y, color) {
                 context.font = '18pt Calibri';
-                context.fillStyle = 'black';
+                context.fillStyle = color;
                 context.fillText(msg, x, y);
             },
             //Permet de cacher le formulaire de connection et d'afficher le whiteboard
@@ -120,24 +122,15 @@ Le composant a deux modes :
                 var writeMessage = this.writeMessage;
                 //Ecoute de l'event chat_msg de socket IO pour inserer un message
                 this.socket.on('chat_msg', function(msg){
-                    writeMessage(ctx, msg.content, msg.pos.x, msg.pos.y);
+                    writeMessage(ctx, msg.content, msg.pos.x, msg.pos.y, msg.color);
                 });
             },
-            //Fonction pour générer une couleur aléatoire
-            randomColor : function () {
-                var letters = '0123456789ABCDEF'.split('');
-                var color = '#';
-                for (var i = 0; i < 6; i++ ) {
-                    color += letters[Math.floor(Math.random() * 16)];
-                }
-                return color;
-            },
             //permet d'ajouter un utilisateur à la liste
-            addUser : function(name) {
+            addUser : function(name, color) {
                 if(!this.users){
                     this.users = [];
                 }
-                this.push('users',{name : name});
+                this.push('users',{name : name, color : color});
             },
             //permet de supprimer un utilisateur à la liste
             removeUser : function(name) {
@@ -164,7 +157,7 @@ Le composant a deux modes :
                     this.initCanvas();
                     //Ecoute de l'évent adduser pour ajouter un utilisateur à la liste
                     this.socket.on('adduser', function(msg){
-                        self.addUser(msg.username)
+                        self.addUser(msg.username, msg.color)
                     });
                     //Ecoute de l'évent removeuser pour supprimer un utilisateur à la liste
                     this.socket.on('removeuser', function(msg){

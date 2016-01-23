@@ -54,8 +54,3 @@ paper-header-panel {
   overflow: hidden;
   background: #ccc;
 }
-
-
-.red {
-    background-color: var(--paper-red-300);
-}
