@@ -12,6 +12,7 @@ Le composant a deux modes :
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html"/>
 <link rel="import" href="../../bower_components/paper-header-panel/paper-header-panel.html"/>
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html"/>
 
 <dom-module id="component-whiteboard">
     <link rel="import" type="css" href="style.css">
@@ -43,11 +44,21 @@ Le composant a deux modes :
         <!--
             Formulaire d'inscription de l'utilisateur, visible à l'arrivée de l'utilisateur sur la page
         -->
-        <div id="connection">
-            <label for="user">Nom d'utilisateur</label>
-            <input id="user" type="text" size="20"/>
-            <paper-button raised id="connect">Connection</paper-button>
-        </div>
+        <paper-dialog id="connection" modal>
+            <paper-header-panel class="blue">
+                <div class="paper-header">Veuillez vous identifier</div>
+                <div class="style-scope paper-header-panel flex-vertical">
+                    <div>
+                        <label for="user">Nom d'utilisateur</label>
+                        <input id="user" type="text" size="20"/>
+                    </div>
+                    <div>
+                        <paper-button raised id="connect">Se connecter</paper-button>
+                    </div>
+                </div>
+            </paper-header-panel>
+        </paper-dialog>
+
     </template>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -104,9 +115,7 @@ Le composant a deux modes :
             },
             //Permet de cacher le formulaire de connection et d'afficher le whiteboard
             connection : function() {
-                Polymer.dom(this.root).querySelector("#whiteboard").style.display = "";
-                Polymer.dom(this.root).querySelector("#userList").style.display = "none";
-                Polymer.dom(this.root).querySelector("#connection").style.display = "none";
+                Polymer.dom(this.root).querySelector("#connection").close();
                 this.initCanvas();
             },
             //Permet d'initiliser le canvas
@@ -147,8 +156,8 @@ Le composant a deux modes :
             ready : function(e) {
                 //Si mode utilisateur on affiche seulement le formulaire de connection pour commencer
                 if(this.modeuser == ''){
-                    Polymer.dom(this.root).querySelector("#whiteboard").style.display = "none";
-                    Polymer.dom(this.root).querySelector("#connection").style.display = "block";
+                    Polymer.dom(this.root).querySelector("#userList").style.display = "none";
+                    Polymer.dom(this.root).querySelector("#connection").open();
                 }
                 //Sinon on affiche le whiteboard
                 else {

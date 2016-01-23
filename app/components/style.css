@@ -19,10 +19,6 @@
     width: 100%;
 }
 
-#connection {
-    display : none;
-}
-
 paper-header-panel {       
     margin: 12px;
     width: 1400px;
@@ -53,4 +49,29 @@ paper-header-panel {
   border-radius: 50%;
   overflow: hidden;
   background: #ccc;
+}
+
+#connection paper-header-panel {
+    height : 150px;
+    width : auto;
+    padding : 0;
+    margin : 0;
+}
+#connection{
+    border-radius: 10px;
+}
+
+#connection .paper-header{
+    border-radius: 10px 10px 0px 0px;
+}
+
+#connection .flex-vertical > div {
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+#connection paper-button {
+    float:right;
 }
