@@ -5,6 +5,7 @@ Le composant a deux modes :
     -mode normal => pour le "whiteboard" à projeter qui contient la liste des utilisateurs inscrit
 -->
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
@@ -49,8 +50,7 @@ Le composant a deux modes :
                 <div class="paper-header">Veuillez vous identifier</div>
                 <div class="style-scope paper-header-panel flex-vertical">
                     <div>
-                        <label for="user">Nom d'utilisateur</label>
-                        <input id="user" type="text" size="20"/>
+                        <paper-input id="user" label="Nom d'utilisateur" autofocus></paper-input>
                     </div>
                     <div>
                         <paper-button raised id="connect">Se connecter</paper-button>
@@ -73,7 +73,8 @@ Le composant a deux modes :
             listeners: {
                 'canvas.click' : 'showContentBox',
                 'textBox.keypress' : 'insertText',
-                'connect.click' : 'connection'
+                'connect.click' : 'connection',
+                'user.keypress' : 'connection'
             },
             properties : {
                 modeuser: false //mode d'utilisation du composant, false = whiteboard, '' = mode utilisateur
@@ -81,8 +82,8 @@ Le composant a deux modes :
             getMousePos : function (canvas, evt) {
                 var rect = canvas.getBoundingClientRect();
                 return {
-                  x: evt.clientX - rect.left,
-                  y: evt.clientY - rect.top
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top
                 };
             },
             //Permet de rendre visible la zone de texte à l'endroit du clique de l'utilisateur
@@ -99,8 +100,8 @@ Le composant a deux modes :
                 //pour qu'ils se mettent à jour
                 if(e.keyCode == 13) {
                     this.socket.emit('chat_msg', {
-                      'content': e.target.value,
-                      'pos': this.currentMousePos
+                        'content': e.target.value,
+                        'pos': this.currentMousePos
                     });
                     //On cache la zone de texte
                     Polymer.dom(this.root).querySelector('#textBox').style.display='none';
@@ -114,25 +115,51 @@ Le composant a deux modes :
                 context.fillText(msg, x, y);
             },
             //Permet de cacher le formulaire de connection et d'afficher le whiteboard
-            connection : function() {
-                Polymer.dom(this.root).querySelector("#connection").close();
-                this.initCanvas();
+            connection : function(e) {
+                //Lors de la touche entrée on informe l'ensemble des "whiteboard" du texte inséré
+                //pour qu'ils se mettent à jour
+                //e.keyCode si event de touche entree, !e.keyCode si clique sur le bouton
+                if(e.keyCode == 13 || !e.keyCode) {
+                    Polymer.dom(this.root).querySelector("#connection").close();
+                    var userName = Polymer.dom(this.root).querySelector("#user").value;
+                    var msg = {username: userName};
+                    this.socket.emit('chat_cnx', msg);
+                }
             },
             //Permet d'initiliser le canvas
             initCanvas : function() {
-                var userName = Polymer.dom(this.root).querySelector("#user").value;
                 this.canvas = Polymer.dom(this.root).querySelector('#canvas');
                 this.socket = io();
                 var ctx = this.canvas.getContext('2d');
+                var randomID = Math.random();
+                //On demande au serveur les messages courant de manière à initialiser le canvas à
+                this.socket.emit('init',{counter : randomID});
+                var _this = this;
+                this.socket.on('init'+randomID, function(msg){
+                    _this.update(msg.textSave);
+                });
 
-                var msg = {username:userName};
-                this.socket.emit('chat_cnx', msg);
-
-                var writeMessage = this.writeMessage;
                 //Ecoute de l'event chat_msg de socket IO pour inserer un message
                 this.socket.on('chat_msg', function(msg){
-                    writeMessage(ctx, msg.content, msg.pos.x, msg.pos.y, msg.color);
+                    _this.writeMessage(ctx, msg.content, msg.pos.x, msg.pos.y, msg.color);
                 });
+            },
+            update : function(textSave) {
+                // on l'initialisation est déjà réalisé pour ce client, la prochaine fois on ne veut pas le faire
+                if(textSave) {
+                    for (var i = 0; i < textSave.length; i++) {
+                        this.writeMessage(this.canvas.getContext('2d'), textSave[i].content, textSave[i].pos.x, textSave[i].pos.y, textSave[i].color);
+                    }
+                }
+            },
+            updateUsers : function(users) {
+                // on l'initialisation est déjà réalisé pour ce client, la prochaine fois on ne veut pas le faire
+                if(users){
+                    for(var key in users) {
+                        this.addUser(users[key].name, users[key].color);
+                    }
+                }
+
             },
             //permet d'ajouter un utilisateur à la liste
             addUser : function(name, color) {
@@ -154,6 +181,8 @@ Le composant a deux modes :
             },
             //Event au moment où notre composant est pret à être utilisé
             ready : function(e) {
+                //initilisation du canvas
+                this.initCanvas();
                 //Si mode utilisateur on affiche seulement le formulaire de connection pour commencer
                 if(this.modeuser == ''){
                     Polymer.dom(this.root).querySelector("#userList").style.display = "none";
@@ -162,11 +191,15 @@ Le composant a deux modes :
                 //Sinon on affiche le whiteboard
                 else {
                     var self = this;
-                    //initilisation du canvas
-                    this.initCanvas();
                     //Ecoute de l'évent adduser pour ajouter un utilisateur à la liste
                     this.socket.on('adduser', function(msg){
                         self.addUser(msg.username, msg.color)
+                    });
+                    var randomID = Math.random();
+                    //On demande au serveur les messages courant de manière à initialiser le canvas à
+                    this.socket.emit('initUsers',{counter : randomID});
+                    this.socket.on('initUsers'+randomID, function(msg){
+                        self.updateUsers(msg.users)
                     });
                     //Ecoute de l'évent removeuser pour supprimer un utilisateur à la liste
                     this.socket.on('removeuser', function(msg){

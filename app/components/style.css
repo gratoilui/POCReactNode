@@ -52,8 +52,8 @@ paper-header-panel {
 }
 
 #connection paper-header-panel {
-    height : 150px;
-    width : auto;
+    height : 200px;
+    width : 300px;
     padding : 0;
     margin : 0;
 }
