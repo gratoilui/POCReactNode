@@ -20,8 +20,11 @@
 
 paper-header-panel {       
     margin: 12px;
-    width: 1400px;
     @apply(--shadow-elevation-2dp);
+}
+
+paper-header-panel.board {
+    width: 1400px;
 }
 
 .paper-header {

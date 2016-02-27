@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WhiteBoard App</title>
+    <script src="bower_components/qrcode-js/qrcode.js"></script>
+
+    <style>
+        .container {
+            text-align : center;
+        }
+
+        .container > div {
+            display : inline-block;
+            margin : 20px;
+        }
+    </style>
+
+  </head>
+  <body>
+
+    <div class="container">
+        <h1>WhiteBoard App</h1>
+        <div>
+            <a href="http://<%= host %>/app/whiteboard.html"><h2>Board</h2></a>
+            <div id="qrcodeBoard"></div>
+        </div>
+        <div>
+            <a href="http://<%= host %>/app/whiteboardUser.html"><h2>User Board</h2></a>
+            <div id="qrcodeUser"></div>
+        </div>
+     </div>
+
+    <script type="text/javascript">
+        new QRCode(document.getElementById("qrcodeBoard"), "http://<%= host %>/app/whiteboard.html");
+        new QRCode(document.getElementById("qrcodeUser"), "http://<%= host %>/app/whiteboardUser.html");
+     </script>
+  </body>
+</html>
