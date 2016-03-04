@@ -77,3 +77,15 @@ paper-header-panel.board {
 #connection paper-button {
     float:right;
 }
+
+#userColumn {
+    height: 97%;
+}
+
+#userList{
+    height: 80%;
+}
+
+#qrcodeUser {
+    margin : 10px;
+}

@@ -15,6 +15,8 @@ Le composant a deux modes :
 <link rel="import" href="../../bower_components/paper-header-panel/paper-header-panel.html"/>
 <link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html"/>
 
+<script src="../../bower_components/qrcode.js/qrcode.js"></script>
+
 <dom-module id="component-whiteboard">
     <link rel="import" type="css" href="style.css">
     <template>
@@ -29,17 +31,20 @@ Le composant a deux modes :
                     <canvas id="canvas" width="1400" height="650"></canvas>
                 </div>
             </paper-header-panel>
-            <paper-header-panel id="userList" class="green">
-                <div class="paper-header">Utilisateurs</div>
-                <paper-listbox selected="1" class="style-scope paper-header-panel">
-                    <template is="dom-repeat" items="{{users}}" as="user">
-                        <paper-icon-item>
-                            <!-- style$ pour pouvoir mixer du texte avec du data binding -->
-                            <div class="avatar" style$="background-color:{{user.color}}" item-icon></div>{{user.name}}
-                        </paper-icon-item>
-                    </template>
-                </paper-listbox>
-            </paper-header-panel>
+            <div id="userColumn">
+                <paper-header-panel id="userList" class="green">
+                    <div class="paper-header">Utilisateurs</div>
+                    <paper-listbox selected="1" class="style-scope paper-header-panel">
+                        <template is="dom-repeat" items="{{users}}" as="user">
+                            <paper-icon-item>
+                                <!-- style$ pour pouvoir mixer du texte avec du data binding -->
+                                <div class="avatar" style$="background-color:{{user.color}}" item-icon></div>{{user.name}}
+                            </paper-icon-item>
+                        </template>
+                    </paper-listbox>
+                </paper-header-panel>
+                <div id="qrcodeUser"></div>
+            </div>
         </div>
 
         <!--
@@ -88,11 +93,14 @@ Le composant a deux modes :
             },
             //Permet de rendre visible la zone de texte à l'endroit du clique de l'utilisateur
             showContentBox : function (e) {
-                Polymer.dom(this.root).querySelector('#textBox').style.display='block';
-                Polymer.dom(this.root).querySelector('#textBox').style.top = e.clientY+"px";
-                Polymer.dom(this.root).querySelector('#textBox').style.left = e.clientX+"px";
-                Polymer.dom(this.root).querySelector('#textBox').focus();
-                this.currentMousePos = this.getMousePos(this.canvas, e);
+                //Seulement si on est en mode user
+                if(this.modeuser == '') {
+                    Polymer.dom(this.root).querySelector('#textBox').style.display = 'block';
+                    Polymer.dom(this.root).querySelector('#textBox').style.top = e.clientY + "px";
+                    Polymer.dom(this.root).querySelector('#textBox').style.left = e.clientX + "px";
+                    Polymer.dom(this.root).querySelector('#textBox').focus();
+                    this.currentMousePos = this.getMousePos(this.canvas, e);
+                }
             },
             //Permet d'informer les clients d'un nouveau message
             insertText : function(e){
@@ -185,11 +193,12 @@ Le composant a deux modes :
                 this.initCanvas();
                 //Si mode utilisateur on affiche seulement le formulaire de connection pour commencer
                 if(this.modeuser == ''){
-                    Polymer.dom(this.root).querySelector("#userList").style.display = "none";
+                    Polymer.dom(this.root).querySelector("#userColumn").style.display = "none";
                     Polymer.dom(this.root).querySelector("#connection").open();
                 }
                 //Sinon on affiche le whiteboard
                 else {
+                    new QRCode("qrcodeUser", {text : document.location.origin+"/app/whiteboardUser.html", width : 130, height : 130  });
                     var self = this;
                     //Ecoute de l'évent adduser pour ajouter un utilisateur à la liste
                     this.socket.on('adduser', function(msg){

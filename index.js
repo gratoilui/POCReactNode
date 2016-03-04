@@ -2,41 +2,13 @@ var app = require('express')();
 var express = require('express');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var path = require('path');
 
 var port = 3000;
-//app.use(express.static(__dirname + '/'));
 
-//On dit à expressJS que les fichiers dans le dossier bower-components sont accessible
-app.use('/bower_components', express.static('bower_components'));
-app.use('/app', express.static('app'));
+app.use(express.static(__dirname + '/'));
 
-app.set('view engine', 'ejs');
-app.set('views', __dirname);
-
-app.get('/', function(req, res) {
-    //res.sendFile(path.join(__dirname + '/index.html'));
-    res.render("index", { host: getHost(port) });
-});
 var users = {}; // liste des utilisateurs connectés
 var textSave = []; //Ensemble des textes écrit avec leur position et leur couleur pour les nouveaux arrivant
-
-
-//récupère l'addresse de l'application
-function getHost(port) {
-    var os = require('os');
-    var interfaces = os.networkInterfaces();
-    var addresses = [];
-    for (var k in interfaces) {
-        for (var k2 in interfaces[k]) {
-            var address = interfaces[k][k2];
-            if (address.family === 'IPv4' && !address.internal) {
-                addresses.push(address.address);
-            }
-        }
-    }
-    return addresses[0]+':'+port;
-}
 
 
 //Fonction pour générer une couleur aléatoire
