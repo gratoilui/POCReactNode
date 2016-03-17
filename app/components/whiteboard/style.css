@@ -9,9 +9,6 @@
     z-index : 100;
 }
 
-#canvas {
-}
-
 #whiteboard {
     left: 0px;
     height: 715px;
@@ -51,31 +48,6 @@ paper-header-panel.board {
   border-radius: 50%;
   overflow: hidden;
   background: #ccc;
-}
-
-#connection paper-header-panel {
-    height : 200px;
-    width : 300px;
-    padding : 0;
-    margin : 0;
-}
-#connection{
-    border-radius: 10px;
-}
-
-#connection .paper-header{
-    border-radius: 10px 10px 0px 0px;
-}
-
-#connection .flex-vertical > div {
-    margin-left: 20px;
-    margin-right: 20px;
-    margin-bottom: 10px;
-    margin-top: 10px;
-}
-
-#connection paper-button {
-    float:right;
 }
 
 #userColumn {

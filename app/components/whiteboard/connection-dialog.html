@@ -1,0 +1,97 @@
+<!--
+Composant permettant d'afficher une boite de dialogue modale
+-->
+<link rel="import" href="../../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../../bower_components/paper-styles/paper-styles.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-header-panel/paper-header-panel.html"/>
+<link rel="import" href="../../../bower_components/paper-dialog/paper-dialog.html"/>
+<link rel="import" href="./whiteboard-canvas.html"/>
+
+<dom-module id="connection-dialog">
+    <style>
+        #connection paper-header-panel {
+            height : 200px;
+            width : 300px;
+            padding : 0;
+            margin : 0;
+        }
+        #connection{
+            border-radius: 10px;
+        }
+
+        #connection .paper-header{
+            border-radius: 10px 10px 0px 0px;
+        }
+
+        #connection .flex-vertical > div {
+            margin-left: 20px;
+            margin-right: 20px;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+
+        #connection paper-button {
+            float:right;
+        }
+        .paper-header {
+            height: 60px;
+            font-size: 16px;
+            line-height: 60px;
+            padding: 0 10px;
+            color: white;
+        }
+
+        .blue .paper-header {
+            background-color: var(--paper-light-blue-500);
+        }
+        paper-header-panel {
+            margin: 12px;
+            @apply(--shadow-elevation-2dp);
+        }
+    </style>
+    <template>
+        <!--
+            Formulaire d'inscription de l'utilisateur, visible à l'arrivée de l'utilisateur sur la page
+        -->
+        <paper-dialog id="connection" modal>
+            <paper-header-panel class="blue">
+                <div class="paper-header">Veuillez vous identifier</div>
+                <div class="style-scope paper-header-panel flex-vertical">
+                    <div>
+                        <paper-input id="user" label="Nom d'utilisateur" autofocus></paper-input>
+                    </div>
+                    <div>
+                        <paper-button raised id="connect">Se connecter</paper-button>
+                    </div>
+                </div>
+            </paper-header-panel>
+        </paper-dialog>
+
+    </template>
+    <script>
+        Polymer({
+            //Ecoute des evenements sur le composant
+            listeners: {
+                'connect.click' : 'connection',
+                'user.keypress' : 'connection'
+            },
+            //Permet de cacher le formulaire de connection et d'afficher le whiteboard
+            connection : function(e) {
+                //Lors de la touche entrée on informe l'ensemble des "whiteboard" du texte inséré
+                //pour qu'ils se mettent à jour
+                //e.keyCode si event de touche entree, !e.keyCode si clique sur le bouton
+                if(e.keyCode == 13 || !e.keyCode) {
+                    this.$.connection.close();
+                    var userName = this.$.user.value;
+                    var msg = {username: userName};
+                    this.fire('connection', msg);
+                }
+            },
+            //Event au moment où notre composant est pret à être utilisé
+            ready : function(e) {
+                this.$.connection.open();
+            }
+        });
+    </script>
+</dom-module>

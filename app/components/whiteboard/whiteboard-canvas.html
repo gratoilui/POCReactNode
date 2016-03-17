@@ -1,0 +1,67 @@
+<!--
+Composant représente le canvas "whiteboard"
+-->
+
+<dom-module id="whiteboard-canvas">
+    <link rel="import" type="css" href="style.css">
+    <template>
+        <div>
+            <canvas id="canvas" width="1400" height="650"></canvas>
+        </div>
+    </template>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        Polymer({
+            is: 'whiteboard-canvas',
+            currentMousePos: {
+                x : 0,
+                y : 0
+            },
+            canvas: null,
+            socket: null,
+            getMousePos : function (canvas, evt) {
+                var rect = canvas.getBoundingClientRect();
+                return {
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top
+                };
+            },
+            //Permet d'écrire un message dans le canvas
+            writeMessage : function(context, msg, x, y, color) {
+                context.font = '18pt Calibri';
+                context.fillStyle = color;
+                context.fillText(msg, x, y);
+            },
+            //Permet d'initiliser le canvas
+            initCanvas : function() {
+                this.canvas = this.$.canvas;
+                this.socket = io();
+                var ctx = this.canvas.getContext('2d');
+                var randomID = Math.random();
+                //On demande au serveur les messages courant de manière à initialiser le canvas
+                var _this = this;
+                this.socket.on('init'+randomID, function(msg){
+                    _this.update(msg.textSave);
+                });
+                this.socket.emit('init',{counter : randomID});
+                //Ecoute de l'event chat_msg de socket IO pour inserer un message
+                this.socket.on('chat_msg', function(msg){
+                    _this.writeMessage(ctx, msg.content, msg.pos.x, msg.pos.y, msg.color);
+                });
+            },
+            update : function(textSave) {
+                // on l'initialisation est déjà réalisé pour ce client, la prochaine fois on ne veut pas le faire
+                if(textSave) {
+                    for (var i = 0; i < textSave.length; i++) {
+                        this.writeMessage(this.canvas.getContext('2d'), textSave[i].content, textSave[i].pos.x, textSave[i].pos.y, textSave[i].color);
+                    }
+                }
+            },
+            //Event au moment où notre composant est pret à être utilisé
+            ready : function(e) {
+                //initilisation du canvas
+                this.initCanvas();
+            }
+        });
+    </script>
+</dom-module>

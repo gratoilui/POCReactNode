@@ -1,0 +1,89 @@
+<!--
+Composant représente le "whiteboard" côté utilisateur
+-->
+<link rel="import" href="../../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="../../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../../bower_components/paper-styles/paper-styles.html">
+<link rel="import" href="../../../bower_components/paper-header-panel/paper-header-panel.html"/>
+<link rel="import" href="./whiteboard-canvas.html"/>
+<link rel="import" href="./connection-dialog.html"/>
+
+<dom-module id="whiteboard-users">
+    <link rel="import" type="css" href="style.css">
+    <template>
+        <!--
+            Partie representant le white board
+        -->
+        <input id="textBox" />
+        <div id="whiteboard" class="layout horizontal">
+            <paper-header-panel class="blue board">
+                <div class="paper-header">Brainstorming</div>
+                <div class="style-scope paper-header-panel" >
+                    <whiteboard-canvas id="canvas"/>
+                </div>
+            </paper-header-panel>
+        </div>
+
+        <!--
+            Dialogue modale de connexion
+        -->
+        <connection-dialog id="dialog"/>
+
+    </template>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        Polymer({
+            currentMousePos: {
+                x : 0,
+                y : 0
+            },
+            canvas: null,
+            socket: null,
+            //Ecoute des evenements sur le composant
+            listeners: {
+                'canvas.click' : 'showContentBox',
+                'textBox.keypress' : 'insertText',
+                'dialog.connection' : 'connection'
+            },
+            getMousePos : function (canvas, evt) {
+                var rect = canvas.getBoundingClientRect();
+                return {
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top
+                };
+            },
+            //Permet de rendre visible la zone de texte à l'endroit du clique de l'utilisateur
+            showContentBox : function (e) {
+                this.$.textBox.style.display = 'block';
+                this.$.textBox.style.top = e.clientY + "px";
+                this.$.textBox.style.left = e.clientX + "px";
+                this.$.textBox.focus();
+                this.currentMousePos = this.getMousePos(this.$.canvas.querySelector("#canvas"), e);
+            },
+            //Permet d'informer les clients d'un nouveau message
+            insertText : function(e){
+                //Lors de la touche entrée on informe l'ensemble des "whiteboard" du texte inséré
+                //pour qu'ils se mettent à jour
+                if(e.keyCode == 13) {
+                    this.socket.emit('chat_msg', {
+                        'content': e.target.value,
+                        'pos': this.currentMousePos
+                    });
+                    //On cache la zone de texte
+                    this.$.textBox.style.display='none';
+                    this.$.textBox.value = '';
+                }
+            },
+            //Permet de cacher le formulaire de connection et d'afficher le whiteboard
+            connection : function(e) {
+                this.socket.emit('chat_cnx', {username: e.detail.username});
+            },
+            //Event au moment où notre composant est pret à être utilisé
+            ready : function(e) {
+                this.socket = io();
+            }
+        });
+    </script>
+</dom-module>
